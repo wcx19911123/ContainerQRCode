@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>3楼仓库生成二维码辅助工具</title>
+    <script>
+        let config = [
+            ['MaterialCode', '物料代码'],
+            ['BatchCode', '批次号'],
+            ['Manufacturers', '来源'],
+            ['PeriodDate', '到期日期', 'date'],
+            ['PONumber', '采购订单编号'],
+            ['WorkNumber', '生产任务号'],
+            ['InStorgeNumber', '入库单号'],
+            ['OutStorgeNumber', '出库单号'],
+            ['DeliverNumber', '送货单号'],
+            ['OrderNumber', '订单号'],
+        ];
+        const PREFIX = '__ContainerQRCode_';
+
+        function set(k, v) {
+            localStorage.setItem(PREFIX + k, v);
+        }
+
+        function get(k) {
+            return localStorage.getItem(PREFIX + k);
+        }
+
+        window.onload = function () {
+            // 生成页面
+            let tBody = document.querySelector('tbody#tBody');
+            for (let i = 0; i < config.length; i++) {
+                tBody.innerHTML += `<tr>
+    <td style="display: none;">${config[i][0]}</td>
+    <td>${config[i][1]}</td>
+    <td><input name="${config[i][0]}" type="${config[i][2] || 'text'}"/></td>
+</tr>`;
+            }
+            // 增加缓存
+            [...document.querySelectorAll('input[type=text],input[type=date]')].forEach(o => o.addEventListener('change', o => {
+                set(o.target.name, o.target.value);
+            }));
+            // 读取缓存
+            [...document.querySelectorAll('input[type=text],input[type=date]')].forEach(o => {
+                o.value = get(o.name) || '';
+            });
+            // 显示页面
+            document.querySelector('div#mainDiv').style.display = '';
+        };
+
+        function generateCode() {
+            document.querySelector('textarea#code').value =
+                JSON.stringify([...document.querySelectorAll('input[type=text],input[type=date]')].reduce((a, b) => {
+                    a[b.name] = b.value;
+                    return a;
+                }, {}));
+        }
+
+        function copyCode() {
+            document.querySelector('textarea#code').select();
+            document.execCommand('copy');
+        }
+    </script>
+</head>
+<body>
+<div id="mainDiv" style="display: none;">
+    <table>
+        <thead>
+        <tr>
+            <td style="display: none;">字段代码</td>
+            <td colspan="2">【1.录入信息↓↓↓】</td>
+        </tr>
+        </thead>
+        <tbody id="tBody">
+        </tbody>
+    </table>
+    <input type="button" value="【2.生成代码】" onclick="generateCode();">
+    <input type="button" value="【3.复制代码】" onclick="copyCode();"><br/>【4.复制后直接粘贴到二维码生成软件即可】<br/>
+    <textarea id="code" cols="60" rows="8"></textarea>
+</div>
+</body>
+</html>
